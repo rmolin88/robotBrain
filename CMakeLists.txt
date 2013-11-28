@@ -75,9 +75,15 @@ target_link_libraries(atxmegaTalker
    /usr/local/lib/libserial.so
  )
  
- add_executable(calibrate src/calibrate.cpp)
- target_link_libraries(calibrate
-  ${catkin_LIBRARIES}
+ add_executable(image_comm_sub_node2 src/image_comm_sub_node2.cpp)
+ target_link_libraries(image_comm_sub_node2
+   ${catkin_LIBRARIES}
+   ${OpenCV_LIBS}
+ )
+
+add_executable(image_comm_pub_node2 src/image_comm_pub_node2.cpp)
+ target_link_libraries(image_comm_pub_node2
+   ${catkin_LIBRARIES}
    ${OpenCV_LIBS}
  )
 

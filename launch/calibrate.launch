@@ -1,3 +1,4 @@
 <launch>
-    <node name="calibrate" pkg="robotBrain" type="calibrate" />
+    <node name="image_comm_sub_node2" pkg="robotBrain" type="image_comm_sub_node2" />
+    <node name="image_comm_pub_node2" pkg="robotBrain" type="image_comm_pub_node2" />
 </launch>
