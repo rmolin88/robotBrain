@@ -1,0 +1,7 @@
+<launch>
+    <node name="face_detect" pkg="robotBrain" type="face_detect" />
+    <node name="image_comm_sub_node" pkg="robotBrain" type="image_comm_sub_node" />
+</launch>
+
+
+

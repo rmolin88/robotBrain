@@ -1,0 +1,6 @@
+<launch>
+    <node name="atxmegaTalker" pkg="robotBrain" type="atxmegaTalker" />
+    <node name="face_detect" pkg="robotBrain" type="face_detect" />
+</launch>
+
+

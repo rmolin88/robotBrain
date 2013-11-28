@@ -1,0 +1,3 @@
+<launch>
+    <node name="calibrate" pkg="robotBrain" type="calibrate" />
+</launch>

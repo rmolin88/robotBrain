@@ -1,0 +1,30 @@
+#This lines are added to the ~/.bashrc for compiling 
+source /opt/ros/groovy/setup.bash
+source ~/ROS/catkin_ws/devel/setup.bash
+
+export EDITOR='gedit'
+alias install='sudo apt-get install'
+
+#to the CMakeLists.txt of your catkin package
+#add to find_package(${OpenCV} REQUIRED)
+#add to the target_link_libraries(${OpenCV_LIB}) of your opencv executable
+export ROS_HOSTNAME=192.168.0.105  				#IP address of local machine or machine running remote node
+export ROS_MASTER_URI=http://192.168.0.109:11311/  		#IP address of remote machine or machine running roscore
+
+#this is bash script that initializes and downloads git repo to file
+#create name.sh on home directory and execute it
+# chmod +x name.sh
+# ./name.sh
+mkdir -p ROS/catkin_ws/src/robotBrain
+cd ROS/catkin_ws/src/robotBrain
+git init
+git config --global user.name "rmolin88"
+git config --global credential.helper 'cache --timeout=3600'
+git remote add origin http://github.com/rmolin88/robotBrain.git
+git pull origin master
+
+#good commands
+git add . -A #adds and removes files from github
+git reset --hard HEAD #for when having trouble pulling reverse to previous commit
+catkin_make -k
+
