@@ -8,6 +8,8 @@
 
 #define sonarThreshold 1300
 #define verycloseThreshold 1050
+#define loopRate 10
+#define remoteRate 20
 
 /**************************************************************************************
 *Node Objectives
@@ -71,8 +73,8 @@ int main ( int argc, char **argv ) {
     opencvCommands = n.subscribe<robotBrain::opencvMessage> ( "opencv_commands", 1000, opencvCallback );
     joy_subscriber = n.subscribe<sensor_msgs::Joy>("joy",1000, joyCallback);
   
-    Rate loop_rate ( 10 );
-    Rate remoteControlLoopRate ( 25 );
+    Rate loop_rate ( loopRate );
+    Rate remoteControlLoopRate ( remoteRate );
     
     //SERIAL INIT
 
@@ -172,7 +174,12 @@ void remoteControlCommands() {
 }
 
 void obstacleAvoidance ( char read[] ) {
-    for ( int i = 0; i<4; i++ ) {
+  
+  leftSonar = 0;		//left sonar
+  centerSonar = 0;		//center
+  rightSonar = 0;	
+  
+  for ( int i = 0; i<4; i++ ) {
         switch ( i ) {
             case 0:
                 leftSonar += ( read[0] - '0' ) *1000;

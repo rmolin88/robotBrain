@@ -18,7 +18,7 @@
 #define yMaxThres 270
 
 #define lowH 0
-#define lowS 104
+#define lowS 100
 #define lowV 100
 
 #define highH 0
@@ -102,6 +102,7 @@ int main( int argc, char** argv )
       if(face) personTracking();				//if we have a face we follow the color 
       else {							//if not 
 	message.camera = 's';
+	message.motor = 'f'; 
 	message.errorOpenCV = '0';
 	opencvCommands.publish( message );
       }
@@ -130,7 +131,7 @@ void colorDetect(){
 	//posY = momentsY/area;
 	}
 	else {face = false; color = false;}//if we loose the color and had a face we lost the face
-	ROS_INFO("[%f %f] xpos area",posX, area);
+	ROS_INFO("[%f %f %f] xpos area",posX, posY, area);
       
 }
 
@@ -163,8 +164,8 @@ void faceDetect(){
 
 void personTracking(){	
 		if( (posX < xMinThres) | (posX > xMaxThres) | (posY < yMinThres) | (posY > yMaxThres) ) {//try to centered on the screen
-			if(posX < xMinThres) 		ROS_INFO("Moving left");//message.camera = 'p';
-			else if(posX > xMaxThres) 	ROS_INFO("Moving right");//message.camera = 'm';
+			if(posX < xMinThres) 		/*ROS_INFO("Moving left");*/message.camera = 'p';
+			else if(posX > xMaxThres) 	/*ROS_INFO("Moving right");*/message.camera = 'm';
 			
 			//if( posY < yMinThres) 	/*ROS_INFO("Moving Forward");*/message.motor = 'f';
 			//else if(posY> yMaxThres) /*ROS_INFO("Moving backwards");*/message.motor = 'r';

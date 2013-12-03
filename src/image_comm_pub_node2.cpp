@@ -21,7 +21,7 @@
 #define lowS 100
 #define lowV 100
 
-#define highH 10
+#define highH 0
 #define highS 255
 #define highV 255
 
@@ -60,10 +60,10 @@ float faceY;
 uint8_t i =0;
 
 uint8_t hue_low = 0;
-uint8_t hue_high = 10;
+uint8_t hue_high = 0;
 uint8_t sat_low = 100; 
 uint8_t sat_high = 255;
-uint8_t val_low = 0;
+uint8_t val_low = 100;
 uint8_t val_high = 255;
 
 //uint8_t c = 0;
