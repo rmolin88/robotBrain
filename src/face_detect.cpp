@@ -18,10 +18,10 @@
 #define yMaxThres 270
 
 #define lowH 0
-#define lowS 100
-#define lowV 100
+#define lowS 121
+#define lowV 87
 
-#define highH 0
+#define highH 10
 #define highS 255
 #define highV 255
 
