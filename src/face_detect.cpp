@@ -31,7 +31,6 @@ sensor_msgs::ImageConstPtr msg;
 cv_bridge::CvImage out_msg;
 image_transport::Publisher pub;
 
-void detectAndDisplay();
 void colorDetect();
 void faceDetect();
 void personTracking();
@@ -90,9 +89,10 @@ int main( int argc, char** argv )
   
     cap.set(CV_CAP_PROP_FRAME_WIDTH, 320);
     cap.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
+    
     while ( n.ok() ){
       cap.read(frame);
-      if( !frame.empty() ) colorDetect();//detectAndDisplay(); 
+      if( !frame.empty() ) colorDetect();
       else {
 	ROS_FATAL("opencv: FRAME FAIL " );
 	sendError();	
@@ -106,7 +106,7 @@ int main( int argc, char** argv )
 	message.errorOpenCV = '0';
 	opencvCommands.publish( message );
       }
-      cv::waitKey(1);
+      //cv::waitKey(1);			if problems uncomment
 
      // ROS_INFO("Frames");
    }
@@ -131,7 +131,7 @@ void colorDetect(){
 	//posY = momentsY/area;
 	}
 	else {face = false; color = false;}//if we loose the color and had a face we lost the face
-	ROS_INFO("[%f %f %f] xpos area",posX, posY, area);
+	//ROS_INFO("[%f %f %f] xpos area",posX, posY, area);
       
 }
 
@@ -141,15 +141,17 @@ void faceDetect(){
    cv::equalizeHist( frame_gray, frame_gray );
    face_cascade.detectMultiScale( frame_gray, faces, 1.1, 2, 0|CV_HAAR_SCALE_IMAGE, cv::Size(30, 30) );
   
+   if(faces.size()){
    //for each face draws an ellipse arround and look for the red color at a distance from 
-   for( i = 0; i < faces.size(); i++ )
-    {
-      cv::Point center( faces[i].x + faces[i].width*0.5, faces[i].y + faces[i].height*0.5 );
-      cv::ellipse( frame, center, cv::Size( faces[i].width*0.5, faces[i].height*0.5), 0, 0, 360, cv::Scalar( 0, 255, 0 ), 2, 8, 0 );
-      faceX = (float) faces[i].x;
-      faceY = (float) faces[i].y;
+   //for( i = 0; i < faces.size(); i++ )
+    //{
+      //cv::Point center( faces[i].x + faces[i].width*0.5, faces[i].y + faces[i].height*0.5 );
+      //cv::ellipse( frame, center, cv::Size( faces[i].width*0.5, faces[i].height*0.5), 0, 0, 360, cv::Scalar( 0, 255, 0 ), 2, 8, 0 );
+      //faceX = (float) faces[i].x;
+      //faceY = (float) faces[i].y;
      
-      if( ((faceX + faceColorThresh) > (posX ) | (faceX - faceColorThresh) < (posX )) ) {
+      //this if was wrong if that was true we do not send image but then would be too strict changed to a face on the frame
+      //if( ((faceX + faceColorThresh) > (posX ) | (faceX - faceColorThresh) < (posX )) ) {
 	face = true; 
 	//publishing camera image
 	out_msg.image    = frame; //frame
@@ -157,13 +159,12 @@ void faceDetect(){
 	msg = out_msg.toImageMsg();
 	pub.publish(msg);
 	ROS_FATAL("PERSON DETECTED");
-	break;
-      }
+	
     }
 }
 
 void personTracking(){	
-		if( (posX < xMinThres) | (posX > xMaxThres) | (posY < yMinThres) | (posY > yMaxThres) ) {//try to centered on the screen
+		if( (posX < xMinThres) | (posX > xMaxThres) ){//| (posY < yMinThres) | (posY > yMaxThres) ) {//try to centered on the screen
 			if(posX < xMinThres) 		/*ROS_INFO("Moving left");*/message.camera = 'p';
 			else if(posX > xMaxThres) 	/*ROS_INFO("Moving right");*/message.camera = 'm';
 			

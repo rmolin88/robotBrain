@@ -3,8 +3,6 @@
 #include <robotBrain/opencvMessage.h>
 #include <SerialStream.h>
 #include <math.h>
-#include <iostream>
-
 
 #define sonarThreshold 1300
 #define verycloseThreshold 1050
@@ -21,9 +19,6 @@
 *
 ****************************************************************************************/
 
-using namespace LibSerial;
-using namespace ros;
-using namespace std;
         
 void obstacleAvoidance ( char read[] );
 void remoteControlCommands();
@@ -31,8 +26,8 @@ void remoteControlCommands();
 void joyCallback(const sensor_msgs::Joy::ConstPtr& joy);
 void opencvCallback (const robotBrain::opencvMessage::ConstPtr& opencvMessage);
 
-Subscriber opencvCommands;
-Subscriber joy_subscriber;
+ros::Subscriber opencvCommands;
+ros::Subscriber joy_subscriber;
 
 
 bool remoteControl = false;
@@ -47,9 +42,9 @@ int32_t subscriberButtonA;		//buttons messages are ints
 int32_t subscriberButtonB;
 int32_t subscriberButtonY;
 
-int16_t leftSonar = 0;		//left sonar
-int16_t centerSonar = 0;		//center
-int16_t rightSonar = 0;		//right
+uint16_t leftSonar;		//left sonar
+uint16_t centerSonar;		//center
+uint16_t rightSonar;		//right
 
 uint8_t Straight;
 uint8_t Left;
@@ -66,31 +61,31 @@ int main ( int argc, char **argv ) {
 
     //ROS INIT
 
-    init ( argc, argv, "atxmegaTalker" );
+    ros::init ( argc, argv, "atxmegaTalker" );
 
-    NodeHandle n;
+    ros::NodeHandle n;
 
     opencvCommands = n.subscribe<robotBrain::opencvMessage> ( "opencv_commands", 1000, opencvCallback );
     joy_subscriber = n.subscribe<sensor_msgs::Joy>("joy",1000, joyCallback);
   
-    Rate loop_rate ( loopRate );
-    Rate remoteControlLoopRate ( remoteRate );
+    ros::Rate loop_rate ( loopRate );
+    ros::Rate remoteControlLoopRate ( remoteRate );
     
     //SERIAL INIT
 
-    SerialStream mySerial;
+    LibSerial::SerialStream mySerial;
 
     mySerial.Open ( "/dev/ttyUSB0" );
 
-    mySerial.SetBaudRate ( SerialStreamBuf::BAUD_57600 );
+    mySerial.SetBaudRate ( LibSerial::SerialStreamBuf::BAUD_57600 );
 
-    mySerial.SetCharSize ( SerialStreamBuf::CHAR_SIZE_8 );
+    mySerial.SetCharSize ( LibSerial::SerialStreamBuf::CHAR_SIZE_8 );
 
     mySerial.SetNumOfStopBits ( 1 );
 
-    mySerial.SetParity ( SerialStreamBuf::PARITY_NONE );
+    mySerial.SetParity ( LibSerial::SerialStreamBuf::PARITY_NONE );
 
-    mySerial.SetFlowControl ( SerialStreamBuf::FLOW_CONTROL_NONE );
+    mySerial.SetFlowControl ( LibSerial::SerialStreamBuf::FLOW_CONTROL_NONE );
 
     if ( !mySerial.good() ) {
         ROS_FATAL ( "COULD NOT SET UP SERIAL COMMUNICATION CLOSING NODE" );
@@ -98,19 +93,28 @@ int main ( int argc, char **argv ) {
         }
 	  
     char read[13];
-    char motorTemp = 0;
-    uint8_t changeInDirectionCounter = 0;
+    char motorTemp = 'f';
+    uint8_t changeInDirectionCounter = 10;
     bool motorPause = false;
+    char cameraTemp = 'p';
+    uint8_t pcounter = 20;
+    
     
     while ( ( mySerial.good() ) & ( n.ok() ) ) {
       
-      
+      //break if there is a change in direction
 	if( (motor == 'f' & motorTemp == 'r') | (motor == 'r' & motorTemp =='f') | (motorPause) ) {
 	  motorPause = true;
-	  motor = 's';
-	  servo = 's';
-	  changeInDirectionCounter++;
-	  if(changeInDirectionCounter == 10) {motorPause = false; changeInDirectionCounter = 0;}	  
+	  motor = servo = 's';
+	  changeInDirectionCounter--;
+	  if(!changeInDirectionCounter) {motorPause = false; changeInDirectionCounter = 10;}	  
+	}
+	
+	if( !(errorOpenCV == '3') ) {	//if camera has not found target pan left to right
+	    cameraSteering = cameraTemp;
+	    pcounter--;
+	    if (pcounter == 10) cameraTemp = 'm';
+	    else if(!pcounter) {pcounter = 20; cameraTemp = 'p';}
 	}
       
 	ROS_INFO("[%c %c %c] Commands to Atxmega ", motor, servo, cameraSteering);
@@ -126,21 +130,22 @@ int main ( int argc, char **argv ) {
 	
 	if ( !(motorPause) ) motorTemp = motor;	//changing motorTemp only if motor is not paused
 	
-	spinOnce();  //spinning here to get values from remote and/or opencv
+	ros::spinOnce();  //spinning here to get values from remote and/or opencv
 
 	while ( remoteControl ) {
 
-		spinOnce();
 		remoteControlCommands();
 			
-		ROS_INFO("[%c %c Teleop Commands]", motor, servo);
+		ROS_INFO("[%c %c] Teleop Commands", motor, servo);
 		
 		mySerial.write(&motor, 1);
 		mySerial.write(&servo, 1);
 		mySerial.write(&cameraSteering, 1);
 		mySerial.write(&errorXmega, 1);
+		ros::spinOnce();
 		
 		remoteControlLoopRate.sleep();
+		//reason why it might be breaking not expecting the xmega error command on xmega board
 	}
 
 	if( (!(motor == 's') & (opencv)) | (!opencv) ) obstacleAvoidance ( read ); //do not avoid obstacles if motors are stop by opencv
@@ -165,11 +170,11 @@ void remoteControlCommands() {
 	  else if(subscriberSteer < 0)servo = 'l';			
 	  else if(!subscriberSteer) servo = 's'; 			
 
-	  if(subscriberForwardThrottle< 0) motor = 'F'; 		//we move faster when doing remote control
-	  else if(subscriberReverseThrottle < 0) motor = 'R';
+	  if(subscriberForwardThrottle< 0) motor = 'f'; 		//we move faster when doing remote control
+	  else if(subscriberReverseThrottle < 0) motor = 'r';
 	  else  motor = 's'; 
 
-	  cameraSteering = 's';
+	  //cameraSteering = 's';
 	
 }
 
@@ -179,6 +184,7 @@ void obstacleAvoidance ( char read[] ) {
   centerSonar = 0;		//center
   rightSonar = 0;	
   
+  //converting char strings to ints
   for ( int i = 0; i<4; i++ ) {
         switch ( i ) {
             case 0:
@@ -252,12 +258,12 @@ void obstacleAvoidance ( char read[] ) {
 	}
     }
     else{ //if there is no obstacle in front we turn towards object if theres any detected
-	if( (cameraSteering == 'p')  ) servo = 'r'; 	
-	else if( (cameraSteering == 'm') ) servo = 'l';
-	else servo = 's';
+	//if( (cameraSteering == 'p')  ) servo = 'r'; 	 this might mess with camera panning
+	//else if( (cameraSteering == 'm') ) servo = 'l';
+	/*else*/ servo = 's';
 	
-	if(!opencv) motor = 'f'; //if receiving commands from camera dont change them
-    }
+	/*if(!opencv)*/ motor = 'f'; //if receiving commands from camera dont change them
+    }	//we do not enter if !opencv anyways
 }
 
 
@@ -271,17 +277,12 @@ void opencvCallback (const robotBrain::opencvMessage::ConstPtr& opencvMessage){
 }
 
 void joyCallback(const sensor_msgs::Joy::ConstPtr& joy){
-	//axes[0] is the left joystick left/right
-	//axes[2] LT
-	//axes[5] RT
-	
-	subscriberReverseThrottle 	=  joy->axes[2] ;		//ranging from -100 to 100
-	subscriberForwardThrottle	= joy->axes[5];
-	subscriberSteer 	= ( joy->axes[6] );		//-30 to 30
-	subscriberButtonA 	= joy->buttons[0];
-	subscriberButtonB 	= joy->buttons[1];
-	subscriberButtonY	= joy->buttons[3];
+	subscriberReverseThrottle 	=  joy->axes[5] ;		
+	subscriberForwardThrottle	= joy->axes[4];
+	subscriberSteer 		= joy->axes[6] ;		
+	subscriberButtonA 		= joy->buttons[0];
+	subscriberButtonB 		= joy->buttons[1];
+	subscriberButtonY		= joy->buttons[3];
     if ( subscriberButtonA ) {remoteControl = true; opencv = false; errorXmega = '2';}
-   if ( subscriberButtonB ) {remoteControl = false; errorXmega = '0'; }
-  
-}
+    if ( subscriberButtonB ) {remoteControl = false; errorXmega = '0'; }
+ }
