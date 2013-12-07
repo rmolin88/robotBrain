@@ -25,6 +25,13 @@ git pull origin master
 
 #good commands
 git add . -A #adds and removes files from github
+git commit -a -m "message"
+git checkout -b branch_name
+git push origin branch_name
+#mergin branch with master
+git checkout master
+git merge branch_name
+git branch -d hotfix
 git reset --hard HEAD #for when having trouble pulling reverse to previous commit
 catkin_make -k
 
