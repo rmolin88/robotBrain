@@ -8,6 +8,7 @@
 #define verycloseThreshold 1050
 #define loopRate 10
 #define remoteRate 20
+#define panValue 80
 
 /**************************************************************************************
 *Node Objectives
@@ -97,7 +98,7 @@ int main ( int argc, char **argv ) {
     uint8_t changeInDirectionCounter = 10;
     bool motorPause = false;
     char cameraTemp = 'p';
-    uint8_t pcounter = 20;
+    uint8_t pcounter = panValue;
     
     
     while ( ( mySerial.good() ) & ( n.ok() ) ) {
@@ -113,8 +114,8 @@ int main ( int argc, char **argv ) {
 	if( !(errorOpenCV == '3') ) {	//if camera has not found target pan left to right
 	    cameraSteering = cameraTemp;
 	    pcounter--;
-	    if (pcounter == 10) cameraTemp = 'm';
-	    else if(!pcounter) {pcounter = 20; cameraTemp = 'p';}
+	    if (pcounter == panValue/2) cameraTemp = 'm';
+	    else if(!pcounter) {pcounter = panValue; cameraTemp = 'p';}
 	}
       
 	ROS_INFO("[%c %c %c] Commands to Atxmega ", motor, servo, cameraSteering);
