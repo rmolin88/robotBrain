@@ -34,11 +34,11 @@ ros::Subscriber joy_subscriber;
 bool remoteControl = false;
 bool opencv = false;
 
-float subscriberSteer;			//axis messages are floats
-float subscriberThrottle;
 float subscriberForwardThrottle; 	
 float subscriberReverseThrottle;
-	
+
+int32_t subscriberRightSteer;
+int32_t subscriberLeftSteer;
 int32_t subscriberButtonA;		//buttons messages are ints
 int32_t subscriberButtonB;
 int32_t subscriberButtonY;
@@ -167,9 +167,9 @@ int main ( int argc, char **argv ) {
 
 void remoteControlCommands() {
 
-	  if(subscriberSteer > 0) servo = 'r'; 			
-	  else if(subscriberSteer < 0)servo = 'l';			
-	  else if(!subscriberSteer) servo = 's'; 			
+	  if(subscriberRightSteer) servo = 'r'; 			
+	  else if(subscriberLeftSteer)servo = 'l';			
+	  else servo = 's'; 			
 
 	  if(subscriberForwardThrottle< 0) motor = 'f'; 		//we move faster when doing remote control
 	  else if(subscriberReverseThrottle < 0) motor = 'r';
@@ -278,9 +278,10 @@ void opencvCallback (const robotBrain::opencvMessage::ConstPtr& opencvMessage){
 }
 
 void joyCallback(const sensor_msgs::Joy::ConstPtr& joy){
-	subscriberReverseThrottle 	=  joy->axes[5] ;		
-	subscriberForwardThrottle	= joy->axes[4];
-	subscriberSteer 		= joy->axes[6] ;		
+	subscriberReverseThrottle 	=  joy->axes[2] ;		
+	subscriberForwardThrottle	= joy->axes[5];
+	subscriberRightSteer 		= joy->buttons[11] ;		
+	subscriberLeftSteer 		= joy->buttons[12] ;
 	subscriberButtonA 		= joy->buttons[0];
 	subscriberButtonB 		= joy->buttons[1];
 	subscriberButtonY		= joy->buttons[3];
