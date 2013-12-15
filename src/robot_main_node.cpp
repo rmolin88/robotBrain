@@ -20,10 +20,7 @@ class robot{
 	public:
 	//ros variables
 	ros::NodeHandle nh_; 
-//	ros::Subscriber opencvCommands;
 	ros::Subscriber joy_subscriber_;
-	//ros::Rate main_loop_rate_;
-    //ros::Rate rc_loop_rate_;
 
 	//remote control variables
     float subscriber_forward_throttle_; 	
@@ -31,16 +28,16 @@ class robot{
 
 	int32_t subscriber_right_steer_;
 	int32_t subscriber_left_steer_;
-	int32_t subscriber_buttonA_;		//buttons messages are ints
+	int32_t subscriber_buttonA_;
 	int32_t subscriber_buttonB_;
 	
 	//program variables
     uint8_t remote_control_;
 	uint8_t opencv_;
 
-	uint16_t left_sonar_;		//left sonar
-	uint16_t center_sonar_;		//center
-	uint16_t right_sonar_;		//right
+	uint16_t left_sonar_;	
+	uint16_t center_sonar_;	
+	uint16_t right_sonar_;	
 	
 	char motor_temp_;
     uint8_t motor_timeout_;
@@ -55,7 +52,7 @@ class robot{
 	
 	char camera_temp_;
 	uint8_t pan_counter_;
-	char serial_read[SERIAL_RECEIVE_SIZE];
+	char serial_read_[SERIAL_RECEIVE_SIZE];
     
 	
 	robot(){
@@ -65,7 +62,7 @@ class robot{
 	
 	void joy_callback(const sensor_msgs::Joy::ConstPtr& joy);
 	//void robot::opencvCallback (const robotBrain::opencvMessage::ConstPtr& opencvMessage);
-	void do_obs_avoidance ( char serial_read[] );
+	void do_obs_avoidance ( char serial_read_[] );
 	void do_remote_control();
 	void pan_camera_servo();
 };
@@ -111,6 +108,7 @@ int main ( int argc, char **argv ) {
     //Serial Init
     serial xmega_serial("/dev/ttyUSB0");
 	
+	//creating robot :)
     robot Sparky;
     
     //initializing variables
@@ -129,7 +127,7 @@ int main ( int argc, char **argv ) {
     Sparky.camera_temp_ = 'p';
     Sparky.pan_counter_ = PAN_VALUE;
     
-    Sparky.serial_read[SERIAL_RECEIVE_SIZE] = 0;
+    Sparky.serial_read_[SERIAL_RECEIVE_SIZE] = 0;
     
     while ( ( xmega_serial.mySerial.good() ) & ( Sparky.nh_.ok() ) ) {
       
@@ -139,9 +137,7 @@ int main ( int argc, char **argv ) {
 		  
 		ROS_INFO("[%c %c %c] Commands to Atxmega ", Sparky.motor_, Sparky.servo_, Sparky.camera_steering_);
 		  
-		//xmega_serial.serial_receive();  
-		
-		if ( xmega_serial.mySerial.rdbuf()->in_avail() ) xmega_serial.mySerial.read ( Sparky.serial_read, SERIAL_RECEIVE_SIZE );
+		if ( xmega_serial.mySerial.rdbuf()->in_avail() ) xmega_serial.mySerial.read ( Sparky.serial_read_, SERIAL_RECEIVE_SIZE );
 		
 		ros::spinOnce();  //spinning here to get values from remote and opencv
 
@@ -156,7 +152,7 @@ int main ( int argc, char **argv ) {
 			rc_loop_rate_.sleep();
 		}
 
-		if( !((Sparky.motor_ == 's') && !(Sparky.motor_pause_)) ) Sparky.do_obs_avoidance ( Sparky.serial_read ); //do not avoid obstacles if motors are stop
+		if( !((Sparky.motor_ == 's') && !(Sparky.motor_pause_)) ) Sparky.do_obs_avoidance ( Sparky.serial_read_ ); //do not avoid obstacles if motors are stop
 		
 		main_loop_rate_.sleep();
     }
@@ -179,10 +175,9 @@ void robot::do_remote_control() {
 	  if(subscriber_forward_throttle_< 0) motor_ = 'f'; 		//we move faster when doing remote control
 	  else if(subscriber_reverse_throttle_ < 0) motor_ = 'r';
 	  else  motor_ = 's'; 
-
 }
 
-void robot::do_obs_avoidance ( char serial_read[] ) {
+void robot::do_obs_avoidance ( char serial_read_[] ) {
   
   left_sonar_ = 0;		//left sonar
   center_sonar_ = 0;		//center
@@ -194,27 +189,27 @@ void robot::do_obs_avoidance ( char serial_read[] ) {
   for ( int i = 0; i<4; i++ ) {
         switch ( i ) {
             case 0:
-                left_sonar_ 	+= ( serial_read[0] - '0' ) *1000;
-                center_sonar_ 	+= ( serial_read[4] - '0' ) *1000;
-                right_sonar_ 	+= ( serial_read[8] - '0' ) *1000;
+                left_sonar_ 	+= ( serial_read_[0] - '0' ) *1000;
+                center_sonar_ 	+= ( serial_read_[4] - '0' ) *1000;
+                right_sonar_ 	+= ( serial_read_[8] - '0' ) *1000;
 
                 break;
             case 1:
-                left_sonar_ 	+= ( serial_read[1] - '0' ) *100;
-                center_sonar_ 	+= ( serial_read[5] - '0' ) *100;
-                right_sonar_ 	+= ( serial_read[9] - '0' ) *100;
+                left_sonar_ 	+= ( serial_read_[1] - '0' ) *100;
+                center_sonar_ 	+= ( serial_read_[5] - '0' ) *100;
+                right_sonar_ 	+= ( serial_read_[9] - '0' ) *100;
 
                 break;
             case 2:
-                left_sonar_ 	+= ( serial_read[2] - '0' ) *10;
-                center_sonar_ 	+= ( serial_read[6] - '0' ) *10;
-                right_sonar_ 	+= ( serial_read[10] -'0' ) *10;
+                left_sonar_ 	+= ( serial_read_[2] - '0' ) *10;
+                center_sonar_ 	+= ( serial_read_[6] - '0' ) *10;
+                right_sonar_ 	+= ( serial_read_[10] -'0' ) *10;
 
                 break;
             case 3:
-                left_sonar_ 	+= ( serial_read[3] - '0' );
-                center_sonar_ 	+= ( serial_read[7] - '0' );
-                right_sonar_ 	+= ( serial_read[11] -'0' );
+                left_sonar_ 	+= ( serial_read_[3] - '0' );
+                center_sonar_ 	+= ( serial_read_[7] - '0' );
+                right_sonar_ 	+= ( serial_read_[11] -'0' );
 
                 break;
             }
@@ -274,16 +269,6 @@ void robot::do_obs_avoidance ( char serial_read[] ) {
 }
    
 
-
-//~ void robot::opencvCallback (const robotBrain::opencvMessage::ConstPtr& opencvMessage){
-    //~ //ROS_INFO("TARGET ACQUIRED");
-    //~ cameraSteering = 	(char) (opencvMessage->camera);		
-    //~ motor = 		(char) (opencvMessage->motor);
-    //~ errorOpenCV = 	(char) (opencvMessage -> errorOpenCV);
-    //~ if( !remote_control_ ) opencv_ = true;
-    //~ errorXmega = errorOpenCV;
-//~ }
-
 void robot::joy_callback(const sensor_msgs::Joy::ConstPtr& joy){
 	subscriber_reverse_throttle_ 	= joy->axes[2] ;		
 	subscriber_forward_throttle_	= joy->axes[5];
@@ -294,15 +279,6 @@ void robot::joy_callback(const sensor_msgs::Joy::ConstPtr& joy){
 	
 	if ( subscriber_buttonA_ ) {remote_control_ = true; opencv_ = false; feedback_xmega_ = RC_COMMAND;camera_steering_ = 's';}
     if ( subscriber_buttonB_ ) {remote_control_ = false; feedback_xmega_ = ERROR_FREE; }
- }
-
-
-
-void serial::transmit_to_serial(char motor, char servo, char camera_steering, char error_xmega){
-	mySerial.write(&motor, 1);
-	mySerial.write(&servo, 1);
-	mySerial.write(&camera_steering, 1);
-	mySerial.write(&error_xmega, 1);
 }
 
 void robot::pan_camera_servo(){
@@ -310,4 +286,11 @@ void robot::pan_camera_servo(){
 	pan_counter_--;
 	if (pan_counter_ == PAN_VALUE/2) camera_temp_ = 'm';
 	else if(!pan_counter_) {pan_counter_ = PAN_VALUE; camera_temp_ = 'p';}
+}
+
+void serial::transmit_to_serial(char motor, char servo, char camera_steering, char error_xmega){
+	mySerial.write(&motor, 1);
+	mySerial.write(&servo, 1);
+	mySerial.write(&camera_steering, 1);
+	mySerial.write(&error_xmega, 1);
 }
