@@ -1,0 +1,5 @@
+<launch>
+    <node name="robot_main_node" pkg="robot_brain" type="robot_main_node" output="screen"/>
+</launch>
+
+
