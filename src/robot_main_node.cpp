@@ -54,83 +54,117 @@ class robot{
 	char OpenCV_feedback_;
 	
 	char camera_temp_;
-	uint8_t pan_counter;
-
+	uint8_t pan_counter_;
+	char serial_read[SERIAL_RECEIVE_SIZE];
     
 	
 	robot(){
 		//opencvCommands = n.subscribe<robotBrain::opencvMessage> ( "opencv_commands", 1000, opencvCallback );
 		joy_subscriber_ = nh_.subscribe<sensor_msgs::Joy>("joy",1000, &robot::joy_callback, this);
-		connect_to_serial();
-		ros::Rate main_loop_rate_(MAIN_LOOP_RATE);
-		ros::Rate rc_loop_rate_ (RC_LOOP_RATE);
 	}
 	
 	void joy_callback(const sensor_msgs::Joy::ConstPtr& joy);
 	//void robot::opencvCallback (const robotBrain::opencvMessage::ConstPtr& opencvMessage);
 	void do_obs_avoidance ( char serial_read[] );
 	void do_remote_control();
-	void connect_to_serial();
-	void transmit_to_serial(char motor, char servo, char camera_steering, char feedback_xmega_);
 	void pan_camera_servo();
 };
 
+class serial{
+	public:
+	
+	LibSerial::SerialStream mySerial;
+
+	serial(std::string serial_name){
+		
+		mySerial.Open ( serial_name );
+
+		mySerial.SetBaudRate ( LibSerial::SerialStreamBuf::BAUD_57600 );
+
+		mySerial.SetCharSize ( LibSerial::SerialStreamBuf::CHAR_SIZE_8 );
+
+		mySerial.SetNumOfStopBits ( 1 );
+
+		mySerial.SetParity ( LibSerial::SerialStreamBuf::PARITY_NONE );
+
+		mySerial.SetFlowControl ( LibSerial::SerialStreamBuf::FLOW_CONTROL_NONE );
+		
+		if ( !mySerial.good() ) {
+		ROS_FATAL("--(!)Failed to Open Serial Port(!)--");
+		exit(-1);
+		}
+	}
+	
+	void transmit_to_serial(char motor, char servo, char camera_steering, char feedback_xmega_);
+	void serial_receive();
+};
+
+
+
 int main ( int argc, char **argv ) {
-
+	
+	
     ros::init ( argc, argv, "robot_main_node" );
-
+    ros::Rate main_loop_rate_(MAIN_LOOP_RATE);
+    ros::Rate rc_loop_rate_(RC_LOOP_RATE);
+    
+    //Serial Init
+    serial xmega_serial("/dev/ttyUSB0");
+	
     robot Sparky;
     
     //initializing variables
     Sparky.remote_control_ = false;
-    opencv_ = false;
-    motor_pause_ = false;
+    Sparky.opencv_ = false;
+    Sparky.motor_pause_ = false;
     
-    motor_temp_ = 'f';
-    motor_ = 'f';
-    servo_ = 's';
-    camera_steering_ = 's';
-    feedback_xmega_ = ERROR_FREE;
-    OpenCV_feedback_ = ERROR_FREE;
-    motor_timeout_ = MOTOR_OFF_TIME;
+    Sparky.motor_temp_ = 'f';
+    Sparky.motor_ = 'f';
+    Sparky.servo_ = 's';
+    Sparky.camera_steering_ = 's';
+    Sparky.feedback_xmega_ = ERROR_FREE;
+    Sparky.OpenCV_feedback_ = ERROR_FREE;
+    Sparky.motor_timeout_ = MOTOR_OFF_TIME;
     
-    char serial_read[SERIAL_RECEIVE_SIZE];
-    char camera_temp_ = 'p';
-    uint8_t pan_counter_ = PAN_VALUE;
+    Sparky.camera_temp_ = 'p';
+    Sparky.pan_counter_ = PAN_VALUE;
     
+    Sparky.serial_read[SERIAL_RECEIVE_SIZE] = 0;
     
-    while ( ( mySerial.good() ) & ( nh_.ok() ) ) {
+    while ( ( xmega_serial.mySerial.good() ) & ( Sparky.nh_.ok() ) ) {
       
-		if( !(OpenCV_feedback_ == TARGET_FOUND) ) Sparky.pan_camera_servo();
+		if( !(Sparky.OpenCV_feedback_ == TARGET_FOUND) ) Sparky.pan_camera_servo();
 		
-		Sparky.transmit_to_serial(motor_, servo_, camera_steering_, feedback_xmega_);
+		xmega_serial.transmit_to_serial(Sparky.motor_, Sparky.servo_, Sparky.camera_steering_, Sparky.feedback_xmega_);
 		  
-		ROS_INFO("[%c %c %c] Commands to Atxmega ", motor_, servo_, camera_steering_);
+		ROS_INFO("[%c %c %c] Commands to Atxmega ", Sparky.motor_, Sparky.servo_, Sparky.camera_steering_);
 		  
-		if ( mySerial.rdbuf()->in_avail() ) mySerial.read ( serial_read, SERIAL_RECEIVE_SIZE );
-
+		//xmega_serial.serial_receive();  
+		
+		if ( xmega_serial.mySerial.rdbuf()->in_avail() ) xmega_serial.mySerial.read ( Sparky.serial_read, SERIAL_RECEIVE_SIZE );
+		
 		ros::spinOnce();  //spinning here to get values from remote and opencv
 
-		while ( remote_control_ ) {
+		while ( Sparky.remote_control_ ) {
 
 			Sparky.do_remote_control();
 				
-			ROS_INFO("[%c %c] Teleop Commands", motor_, servo_);
+			ROS_INFO("[%c %c] Teleop Commands", Sparky.motor_, Sparky.servo_);
 			
 			ros::spinOnce();
 			
 			rc_loop_rate_.sleep();
 		}
 
-		if( !((motor_ == 's') && !(motor_pause_)) ) Sparky.do_obs_avoidance ( serial_read ); //do not avoid obstacles if motors are stop
+		if( !((Sparky.motor_ == 's') && !(Sparky.motor_pause_)) ) Sparky.do_obs_avoidance ( Sparky.serial_read ); //do not avoid obstacles if motors are stop
 		
 		main_loop_rate_.sleep();
     }
 
-	motor_ = servo_ = camera_steering_ = 's';
-	feedback_xmega_ = ERROR;
+	Sparky.motor_ = Sparky.servo_ = Sparky.camera_steering_ = 's';
+	Sparky.feedback_xmega_ = ERROR;
 	ROS_FATAL ( "ROS/COMMUNICATION FAILURE CLOSING NODE" );
-	Sparky.transmit_to_serial(motor_, servo_, camera_steering_, feedback_xmega_)
+	xmega_serial.transmit_to_serial(Sparky.motor_, Sparky.servo_, Sparky.camera_steering_, Sparky.feedback_xmega_);
 
     return -1;
 }
@@ -263,31 +297,8 @@ void robot::joy_callback(const sensor_msgs::Joy::ConstPtr& joy){
  }
 
 
-void robot::connect_to_serial(){
-	//SERIAL INIT
 
-    LibSerial::SerialStream mySerial;
-
-    mySerial.Open ( "/dev/ttyUSB0" );
-
-    mySerial.SetBaudRate ( LibSerial::SerialStreamBuf::BAUD_57600 );
-
-    mySerial.SetCharSize ( LibSerial::SerialStreamBuf::CHAR_SIZE_8 );
-
-    mySerial.SetNumOfStopBits ( 1 );
-
-    mySerial.SetParity ( LibSerial::SerialStreamBuf::PARITY_NONE );
-
-    mySerial.SetFlowControl ( LibSerial::SerialStreamBuf::FLOW_CONTROL_NONE );
-
-    if ( !mySerial.good() ) {
-		ROS_FATAL("--(!)Failed to Open Serial Port(!)--");
-		exit(-1);
-	}
-}
-
-
-void robot::transmit_to_serial(char motor, char servo, char camera_steering, char error_xmega){
+void serial::transmit_to_serial(char motor, char servo, char camera_steering, char error_xmega){
 	mySerial.write(&motor, 1);
 	mySerial.write(&servo, 1);
 	mySerial.write(&camera_steering, 1);
