@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(robot_brain)
 
-## Find catkin macros and libraries
-## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
-## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   image_transport
@@ -30,20 +27,18 @@ add_message_files(
    #opencvMessage.msg
  )
 
-catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES opencv_calibrate
-#  CATKIN_DEPENDS cv_bridge image_transport message_generation roscpp sensor_msgs
-#  DEPENDS system_lib
-)
+catkin_package()
 
 
-include_directories(
-  ${catkin_INCLUDE_DIRS}
+include_directories(inc
+	${catkin_INCLUDE_DIRS}
 )
 
  add_executable(robot_main_node src/robot_main_node.cpp)
+ add_library(robot ~/ROS/catkin_ws/src/robot_brain/src/robot.cpp)
  target_link_libraries(robot_main_node
    ${catkin_LIBRARIES}
    /usr/local/lib/libserial.so
+   robot
  )
+ 
