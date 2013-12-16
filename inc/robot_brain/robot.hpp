@@ -4,6 +4,7 @@
 #include <SerialStream.h>
 #include "ros/ros.h"
 #include <sensor_msgs/Joy.h>
+#include "robot_brain/opencv.h"
 
 #define SONAR_THRESHOLD 1300
 #define CLOSE_SONAR_THRESHOLD 1050
@@ -58,12 +59,12 @@ class robot{
     
 	
 	robot(){
-		opencv_sub_ = n.subscribe<robotBrain::opencv> ( "opencv_commands", 1000, &robot::opencv_callback, this );
+		opencv_sub_ = nh_.subscribe<robot_brain::opencv> ( "opencv_commands", 1000, &robot::opencv_callback, this );
 		joy_subscriber_ = nh_.subscribe<sensor_msgs::Joy>("joy",1000, &robot::joy_callback, this);
 	}
 	
 	void joy_callback(const sensor_msgs::Joy::ConstPtr& joy);
-	void opencv_callback (const robotBrain::opencv::ConstPtr& opencv_msg);
+	void opencv_callback (const robot_brain::opencv::ConstPtr& opencv_msg);
 	void do_obs_avoidance ( char serial_read_[] );
 	void do_remote_control();
 	void pan_camera_servo();

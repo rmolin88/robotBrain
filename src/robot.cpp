@@ -128,3 +128,12 @@ void serial::transmit_to_serial(char motor, char servo, char camera_steering, ch
 	mySerial.write(&camera_steering, 1);
 	mySerial.write(&error_xmega, 1);
 }
+
+void robot::opencv_callback (const robot_brain::opencv::ConstPtr& opencv_msg){
+    //ROS_INFO("TARGET ACQUIRED");
+    camera_steering_ = 		(char) (opencv_msg->camera);		
+    motor_ = 				(char) (opencv_msg->motor);
+    OpenCV_feedback_ = 		(char) (opencv_msg -> errorOpenCV);
+    if( !remote_control_ ) opencv_ = true;
+    feedback_xmega_ = OpenCV_feedback_;
+}

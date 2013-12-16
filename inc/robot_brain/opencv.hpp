@@ -5,7 +5,7 @@
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
-#include "robotBrain/opencv.h"
+#include "robot_brain/opencv.h"
 
 
 #include "opencv2/objdetect/objdetect.hpp"
@@ -70,7 +70,7 @@ class robot_opencv {
 	robot_opencv(uint8_t camera_index){
 		image_transport::ImageTransport it(nh_);
 		pub_ = it.advertise("camera/image", 1);
-		opencv_pub_ = n.advertise<robotBrain::opencv>("opencv_commands",1000);
+		opencv_pub_ = nh_.advertise<robot_brain::opencv>("opencv_commands",1000);
 
 	  
 		cv::VideoCapture cap(camera_index);

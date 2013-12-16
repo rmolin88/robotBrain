@@ -14,18 +14,15 @@ find_package(
  OpenCV REQUIRED  
 )
 
-#generate_messages(
-#   DEPENDENCIES
-#   sensor_msgs
-#)
-
 add_message_files(
-   #FILES
-   #joystickMessage.msg
-   #joy.msg
-   #feedbackMessage.msg
-   #opencvMessage.msg
+   FILES
+   opencv.msg
  )
+
+generate_messages(
+   DEPENDENCIES
+   sensor_msgs
+)
 
 catkin_package()
 
