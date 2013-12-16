@@ -14,24 +14,6 @@ int main ( int argc, char **argv ) {
 	//creating robot :)
     robot Sparky;
     
-    //initializing variables
-    Sparky.remote_control_ = false;
-    Sparky.opencv_ = false;
-    Sparky.motor_pause_ = false;
-    
-    Sparky.motor_temp_ = 'f';
-    Sparky.motor_ = 'f';
-    Sparky.servo_ = 's';
-    Sparky.camera_steering_ = 's';
-    Sparky.feedback_xmega_ = ERROR_FREE;
-    Sparky.OpenCV_feedback_ = ERROR_FREE;
-    Sparky.motor_timeout_ = MOTOR_OFF_TIME;
-    
-    Sparky.camera_temp_ = 'p';
-    Sparky.pan_counter_ = PAN_VALUE;
-    
-    Sparky.serial_read_[SERIAL_RECEIVE_SIZE] = 0;
-    
     while ( ( xmega_serial.mySerial.good() ) & ( Sparky.nh_.ok() ) ) {
       
 		if( !(Sparky.OpenCV_feedback_ == TARGET_FOUND) ) Sparky.pan_camera_servo();

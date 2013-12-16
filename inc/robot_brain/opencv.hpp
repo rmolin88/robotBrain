@@ -38,13 +38,14 @@ class robot_opencv {
 	sensor_msgs::ImageConstPtr msg_;
 	cv_bridge::CvImage out_msg_;
 	image_transport::Publisher pub_;
-	robotBrain::opencv opencv_msg_;
+	image_transport::ImageTransport it_;
+	robot_brain::opencv opencv_msg_;
 	ros::Publisher opencv_pub_; 
 
 	
 	//program variables
-	std::string face_cascade_name_ = "/usr/local/share/OpenCV/haarcascades/haarcascade_frontalface_alt.xml";
-	std::string eyes_cascade_name_ = "/usr/local/share/OpenCV/haarcascades/haarcascade_eye_tree_eyeglasses.xml";
+	std::string face_cascade_name_;
+	std::string eyes_cascade_name_;
 	cv::CascadeClassifier face_cascade_;
 	cv::CascadeClassifier eyes_cascade_;
 
@@ -66,30 +67,34 @@ class robot_opencv {
 	bool color_;
 	bool face_;
 
-	
-	robot_opencv(uint8_t camera_index){
-		image_transport::ImageTransport it(nh_);
-		pub_ = it.advertise("camera/image", 1);
-		opencv_pub_ = nh_.advertise<robot_brain::opencv>("opencv_commands",1000);
+	cv::VideoCapture cap;
+		
+	robot_opencv(): 	it_(nh_), 
+						face_cascade_name_("/usr/local/share/OpenCV/haarcascades/haarcascade_frontalface_alt.xml"),  
+						eyes_cascade_name_( "/usr/local/share/OpenCV/haarcascades/haarcascade_eye_tree_eyeglasses.xml"),
+						color_(false),
+						face_ (false)
 
+	{
+		pub_ = it_.advertise("camera/image", 1);
+		opencv_pub_ = nh_.advertise<robot_brain::opencv>("opencv_commands",1000);
 	  
-		cv::VideoCapture cap(camera_index);
-	  
+		cap.open(CAMERA_INDEX);
+		
 		if(!cap.isOpened()){
 			ROS_FATAL("opencv:  COULD NOT OPEN CAMERA" );
-			sendError();
+			send_error();
 		}
-	  
-		//Load the cascades
+		
 		if( !face_cascade_.load( face_cascade_name_ ) ){ 
 			ROS_FATAL("opencv:  COULD NOT OPEN FACE CASCADE" ); 
-			sendError(); 
+			send_error(); 
 		}
 		if( !eyes_cascade_.load( eyes_cascade_name_ ) ){ 
 			ROS_FATAL("opencv:  COULD NOT OPEN EYE CASCADE"); 
-			sendError(); 
+			send_error(); 
 		}
-
+		
 		cap.set(CV_CAP_PROP_FRAME_WIDTH, 320);
 		cap.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
 	}	

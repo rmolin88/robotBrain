@@ -58,7 +58,22 @@ class robot{
 	char serial_read_[SERIAL_RECEIVE_SIZE];
     
 	
-	robot(){
+	robot():	remote_control_(false),
+				opencv_(false),
+				motor_pause_(false),
+				
+				motor_temp_('f'),
+				motor_('f'),
+				servo_('s'),
+				camera_steering_('s'),
+				feedback_xmega_(ERROR_FREE),
+				OpenCV_feedback_(ERROR_FREE),
+				motor_timeout_(MOTOR_OFF_TIME),
+				
+				camera_temp_('p'),
+				pan_counter_(PAN_VALUE)
+				
+	{
 		opencv_sub_ = nh_.subscribe<robot_brain::opencv> ( "opencv_commands", 1000, &robot::opencv_callback, this );
 		joy_subscriber_ = nh_.subscribe<sensor_msgs::Joy>("joy",1000, &robot::joy_callback, this);
 	}
@@ -71,10 +86,9 @@ class robot{
 };
 
 class serial{
-	public:
-	
 	LibSerial::SerialStream mySerial;
 
+	public:
 	serial(std::string serial_name){
 		
 		mySerial.Open ( serial_name );
@@ -96,7 +110,6 @@ class serial{
 	}
 	
 	void transmit_to_serial(char motor, char servo, char camera_steering, char feedback_xmega_);
-	void serial_receive();
 };
 
 #endif

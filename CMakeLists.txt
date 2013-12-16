@@ -39,3 +39,9 @@ include_directories(inc
    robot
  )
  
+ add_executable(robot_opencv_node src/robot_opencv_node.cpp)
+ add_library(opencv src/opencv.cpp)
+ target_link_libraries(robot_opencv_node
+   ${catkin_LIBRARIES}
+   opencv
+ )
