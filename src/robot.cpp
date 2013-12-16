@@ -1,4 +1,4 @@
-#include <robot_brain/robot.h>
+#include <robot_brain/robot.hpp>
 
 void robot::do_remote_control() {
 

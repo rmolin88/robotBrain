@@ -1,5 +1,5 @@
 #include <math.h>
-#include <robot_brain/robot.h>
+#include <robot_brain/robot.hpp>
 
 int main ( int argc, char **argv ) {
 	

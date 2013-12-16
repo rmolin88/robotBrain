@@ -22,6 +22,7 @@ class robot{
 	//ros variables
 	ros::NodeHandle nh_; 
 	ros::Subscriber joy_subscriber_;
+	ros::Subscriber opencv_sub_;
 
 	//remote control variables
     float subscriber_forward_throttle_; 	
@@ -57,12 +58,12 @@ class robot{
     
 	
 	robot(){
-		//opencvCommands = n.subscribe<robotBrain::opencvMessage> ( "opencv_commands", 1000, opencvCallback );
+		opencv_sub_ = n.subscribe<robotBrain::opencv> ( "opencv_commands", 1000, &robot::opencv_callback, this );
 		joy_subscriber_ = nh_.subscribe<sensor_msgs::Joy>("joy",1000, &robot::joy_callback, this);
 	}
 	
 	void joy_callback(const sensor_msgs::Joy::ConstPtr& joy);
-	//void robot::opencvCallback (const robotBrain::opencvMessage::ConstPtr& opencvMessage);
+	void opencv_callback (const robotBrain::opencv::ConstPtr& opencv_msg);
 	void do_obs_avoidance ( char serial_read_[] );
 	void do_remote_control();
 	void pan_camera_servo();
