@@ -86,9 +86,9 @@ class robot{
 };
 
 class serial{
+	public:
 	LibSerial::SerialStream mySerial;
 
-	public:
 	serial(std::string serial_name){
 		
 		mySerial.Open ( serial_name );

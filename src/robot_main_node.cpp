@@ -5,14 +5,16 @@ int main ( int argc, char **argv ) {
 	
 	
     ros::init ( argc, argv, "robot_main_node" );
-    ros::Rate main_loop_rate_(MAIN_LOOP_RATE);
-    ros::Rate rc_loop_rate_(RC_LOOP_RATE);
     
     //Serial Init
     serial xmega_serial("/dev/ttyUSB0");
 	
 	//creating robot :)
     robot Sparky;
+    
+    ros::Rate main_loop_rate_(MAIN_LOOP_RATE);
+    ros::Rate rc_loop_rate_(RC_LOOP_RATE);
+    
     
     while ( ( xmega_serial.mySerial.good() ) & ( Sparky.nh_.ok() ) ) {
       

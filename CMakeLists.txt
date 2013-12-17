@@ -32,16 +32,16 @@ include_directories(inc
 )
 
  add_executable(robot_main_node src/robot_main_node.cpp)
- add_library(robot ~/ROS/catkin_ws/src/robot_brain/src/robot.cpp)
+ add_library(robot src/robot.cpp)
  target_link_libraries(robot_main_node
    ${catkin_LIBRARIES}
    /usr/local/lib/libserial.so
    robot
  )
  
- add_executable(robot_opencv_node src/robot_opencv_node.cpp)
- add_library(opencv src/opencv.cpp)
- target_link_libraries(robot_opencv_node
-   ${catkin_LIBRARIES}
-   opencv
- )
+ #add_executable(robot_opencv_node src/robot_opencv_node.cpp)
+ #add_library(opencv src/opencv.cpp)
+ #target_link_libraries(robot_opencv_node
+ #  ${catkin_LIBRARIES}
+ #  opencv
+ #)
