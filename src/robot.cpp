@@ -122,7 +122,7 @@ void robot::pan_camera_servo(){
 	else if(!pan_counter_) {pan_counter_ = PAN_VALUE; camera_temp_ = 'p';}
 }
 
-void serial::transmit_to_serial(char motor, char servo, char camera_steering, char error_xmega){
+void robot::transmit_to_serial(char motor, char servo, char camera_steering, char error_xmega){
 	mySerial.write(&motor, 1);
 	mySerial.write(&servo, 1);
 	mySerial.write(&camera_steering, 1);
